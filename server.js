@@ -34,7 +34,7 @@ app.use(methodOverride('_method'))
 // app.use(express.bodyParser());
 app.use(express.json())
 
-const users = [
+let users = [
     {
         id: uuidv4(),
         name: 'Иван',
@@ -52,6 +52,8 @@ const users = [
         isLoggedIn: false
     }
 ]
+
+let orders = []
 
 const checkAuthenticated = (req, res, next) =>  {
     if(req.isAuthenticated()) 
@@ -127,7 +129,7 @@ app.post('/login', /*checkNotAuthenticated,*/ (req, res, next) => {
             // console.log(`req.session.passport: ${JSON.stringify(req.session.passport)}`)
             // console.log(`req.user: ${JSON.stringify(req.user)}`)
             if (!req.user) 
-                return res.send('Unknown user')
+                return res.send(JSON.stringify({userID: null}))
 
             const user = users.find(user => user.id === req.user.id)
             user.isLoggedIn = true
@@ -137,8 +139,29 @@ app.post('/login', /*checkNotAuthenticated,*/ (req, res, next) => {
     })(req, res, next);
 })
 
-app.delete('/logout', (req, res) => {
-    console.log('logout', req.body.userID)
+app.post('/registerOrder', (req, res) => {
+    const orderID = uuidv4()
+    req.body.order.orderID = orderID
+    orders.push(req.body.order)
+    res.send(JSON.stringify({orderID: orderID}))
+    console.log(
+        orders
+    )
+})
+
+app.post('/getOrders', (req, res) => {
+    if(req.body.userID)
+        res.send(JSON.stringify(
+            orders.filter(
+                order => order.userID === req.body.userID
+            ))
+        )
+    else
+        res.send(null)
+})
+
+app.delete('/logoutUser', (req, res) => {
+    console.log('logoutUser', req.body.userID)
     if(req.body.userID === undefined) 
         return res.sendStatus(403);
 
