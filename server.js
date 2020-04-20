@@ -2,12 +2,12 @@ if(process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
 
-const express = require('express')
-const bcrypt = require('bcrypt')
-const passport = require("passport")
-const initPassport = require('./passport-config')
-const flash = require('express-flash')
-const session = require('express-session')
+const express        = require('express')
+const bcrypt         = require('bcrypt')
+const passport       = require("passport")
+const initPassport   = require('./passport-config')
+const flash          = require('express-flash')
+const session        = require('express-session')
 const methodOverride = require('method-override')
 const { v4: uuidv4 } = require('uuid')
 
@@ -20,7 +20,7 @@ initPassport(
 )
 
 app.use(express.urlencoded({ extended: false }))
-app.set('view-engine', 'ejs')
+// app.set('view-engine', 'ejs')
 app.use(flash())
 app.use(session({
     genid: () => uuidv4(),
@@ -69,7 +69,7 @@ const checkNotAuthenticated = (req, res, next) =>  {
 }
 
 app.get('/users', (req, res) => {
-    res.json(users)
+    // res.json(users)
 })
 
 // app.get('/', checkAuthenticated, (req, res) => {
@@ -91,7 +91,6 @@ app.post('/register', /*checkNotAuthenticated,*/ async (req, res) => {
         return res.send(JSON.stringify({result: "existing email"}))
 
     try {
-        // const salt = await bcrypt.genSalt()
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         users.push({
             id: uuidv4(),
@@ -147,9 +146,7 @@ app.post('/registerOrder', (req, res) => {
     req.body.order.orderID = orderID
     orders.push(req.body.order)
     res.send(JSON.stringify({orderID: orderID}))
-    console.log(
-        orders
-    )
+    // console.log(orders)
 })
 
 app.post('/getOrders', (req, res) => {
@@ -164,7 +161,6 @@ app.post('/getOrders', (req, res) => {
 })
 
 app.delete('/logoutUser', (req, res) => {
-    console.log('logoutUser', req.body.userID)
     if(req.body.userID === undefined) 
         return res.sendStatus(403);
 
