@@ -31,26 +31,25 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
-// app.use(express.bodyParser());
 app.use(express.json())
 
 let users = [
-    {
-        id: uuidv4(),
-        name: 'Иван',
-        email: 'w@w',
-        password: 'w',
-        saldo: 58354123,
-        isLoggedIn: false
-    },
-    {
-        id: uuidv4(),
-        name: 'Петр',
-        email: 'q@q',
-        password: 'q',
-        saldo: 100500,
-        isLoggedIn: false
-    }
+    // {
+    //     id: uuidv4(),
+    //     name: 'Иван',
+    //     email: 'w@w',
+    //     password: 'w',
+    //     saldo: 58354123,
+    //     isLoggedIn: false
+    // },
+    // {
+    //     id: uuidv4(),
+    //     name: 'Петр',
+    //     email: 'q@q',
+    //     password: 'q',
+    //     saldo: 100500,
+    //     isLoggedIn: false
+    // }
 ]
 
 let orders = []
@@ -87,20 +86,24 @@ app.get('/users', (req, res) => {
 // })
 
 
-app.post('/register', checkNotAuthenticated, async (req, res) => {
+app.post('/register', /*checkNotAuthenticated,*/ async (req, res) => {
+    if(users.find(user => user.email === req.body.email))
+        return res.send(JSON.stringify({result: "existing email"}))
+
     try {
-        const salt = await bcrypt.genSalt()
-        const hashedPassword = await bcrypt.hash(req.body.password, salt)
+        // const salt = await bcrypt.genSalt()
+        const hashedPassword = await bcrypt.hash(req.body.password, 10)
         users.push({
-            id: Date.now().toString(),
+            id: uuidv4(),
+            name: req.body.name,
             email: req.body.email,
-            password: hashedPassword
+            password: hashedPassword,
+            saldo: 0,
+            isLoggedIn: false
         })
-        // res.status(201).send()
-        res.redirect('/login')
+        res.send(JSON.stringify({result: "success"}))
     } catch (error) {
-        // res.status(500).send()
-        res.redirect('/register')
+        res.send(JSON.stringify({result: "fail"}))
     }
     console.log(users)
 })
@@ -157,7 +160,7 @@ app.post('/getOrders', (req, res) => {
             ))
         )
     else
-        res.send(null)
+        res.send(JSON.stringify([]))
 })
 
 app.delete('/logoutUser', (req, res) => {
@@ -166,10 +169,9 @@ app.delete('/logoutUser', (req, res) => {
         return res.sendStatus(403);
 
     const user = users.find(user => user.id === req.body.userID)
-    user.isLoggedIn = true
+    user.isLoggedIn = false
     
     req.logOut()
-    // res.redirect('http://localhost:3000/')
     res.send(JSON.stringify({result: "success"}))
 })
 
