@@ -10,6 +10,8 @@ const flash          = require('express-flash')
 const session        = require('express-session')
 const methodOverride = require('method-override')
 const { v4: uuidv4 } = require('uuid')
+const path 			 = require('path')
+var history          = require('connect-history-api-fallback')
 
 const app = express()
 
@@ -19,6 +21,10 @@ initPassport(
     id => users.find(user => user.id == id)
 )
 
+app.use(history())
+app.use("/", express.static(__dirname + '/'))
+app.use("/static", express.static(__dirname + '/static'))
+app.use("/img", express.static(__dirname + '/img'))
 app.use(express.urlencoded({ extended: false }))
 // app.set('view-engine', 'ejs')
 app.use(flash())
