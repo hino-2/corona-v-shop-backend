@@ -30,7 +30,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(flash())
 app.use(session({
     genid: () => uuidv4(),
-    secret: process.env.SESSION_SECRET,
+    secret: 'process.env.SESSION_SECRET',
     resave: false,
     saveUninitialized: false
 }))
