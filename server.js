@@ -177,4 +177,4 @@ app.delete('/logoutUser', (req, res) => {
     res.send(JSON.stringify({result: "success"}))
 })
 
-app.listen(3001)
+app.listen(3000)
