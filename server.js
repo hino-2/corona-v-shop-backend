@@ -203,4 +203,4 @@ app.delete('/logoutUser', (req, res) => {
     res.send(JSON.stringify({result: "success"}))
 })
 
-app.listen(3001)
+app.listen(process.env.PORT || 8080)
