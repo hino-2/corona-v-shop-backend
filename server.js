@@ -11,7 +11,10 @@ const session        = require('express-session')
 const methodOverride = require('method-override')
 const { v4: uuidv4 } = require('uuid')
 const path 			 = require('path')
-var history          = require('connect-history-api-fallback')
+const history        = require('connect-history-api-fallback')
+const nodemailer     = require('nodemailer')
+const ejs            = require('ejs')
+const fs             = require('fs')
 
 const app = express()
 
@@ -20,6 +23,14 @@ initPassport(
     email => users.find(user => user.email == email),
     id => users.find(user => user.id == id)
 )
+
+const transporter = nodemailer.createTransport({
+    service: 'Mail.ru',
+    auth: {
+        user: 'info-corona@mail.ru',
+        pass: 'coronavirusshop'
+    }
+})
 
 app.use(history())
 app.use("/", express.static(__dirname + '/'))
@@ -58,7 +69,7 @@ let users = [
     // }
 ]
 
-let orders = []
+let orders = require('./orders')
 
 const checkAuthenticated = (req, res, next) =>  {
     if(req.isAuthenticated()) 
@@ -110,7 +121,7 @@ app.post('/register', /*checkNotAuthenticated,*/ async (req, res) => {
     } catch (error) {
         res.send(JSON.stringify({result: "fail"}))
     }
-    console.log(users)
+    // console.log(users)
 })
 
 // app.post('/login', checkNotAuthenticated, (req, res) => {
@@ -127,7 +138,7 @@ app.post('/register', /*checkNotAuthenticated,*/ async (req, res) => {
 // })
 
 app.post('/login', /*checkNotAuthenticated,*/ (req, res, next) => {
-    console.log('Inside POST /login callback')
+    // console.log('Inside POST /login callback')
     passport.authenticate('local', (err, user, info) => {
         // console.log('Inside passport.authenticate() callback');
         // console.log(`req.session.passport: ${JSON.stringify(req.session.passport)}`)
@@ -150,9 +161,24 @@ app.post('/login', /*checkNotAuthenticated,*/ (req, res, next) => {
 app.post('/registerOrder', (req, res) => {
     const orderID = uuidv4()
     req.body.order.orderID = orderID
+    req.body.order.userName = users.find(user => user.id === req.body.order.userID).name
     orders.push(req.body.order)
     res.send(JSON.stringify({orderID: orderID}))
-    // console.log(orders)
+
+    const mailOptions = {
+        from: 'info-corona@mail.ru',
+        to: users.find(user => user.id === req.body.order.userID).email,
+        subject: `Ваш заказ № ${orderID} зарегистрирован // Шестой русский магазин КОРОНА`,
+        html: ejs.render(fs.readFileSync('./templates/email.ejs', {encoding:'utf-8'}), req.body.order)
+    }
+      
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+    })
 })
 
 app.post('/getOrders', (req, res) => {
@@ -177,4 +203,4 @@ app.delete('/logoutUser', (req, res) => {
     res.send(JSON.stringify({result: "success"}))
 })
 
-app.listen(3000)
+app.listen(3001)

@@ -1,0 +1,17 @@
+<div style="width: 100%; min-height: 500px; background: #696969; font: 32px 'Montserrat', sans-serif; color: white; padding: 10px">
+    <p>Дорогой, <%= userName %>!</p>
+    <p>Спасибо, что оформили у нас заказ № <%= orderID %>.</p>
+    <p>
+        Заказ содержит: <br />
+        <div style="width: 100%">
+            <% for(let i = 0; i < listOfProducts.length; i++) { %>
+                <div style="display: inline-block; width: 70%; min-height: 30px;">
+                    <%= listOfProducts[i].name %> ₽
+                </div>
+                <div style="display: inline-block; width: 30%; min-height: 30px;">
+                    <%= listOfProducts[i].price %> ₽
+                </div>
+            <% } %>
+        </div>
+    </p>
+</div>
