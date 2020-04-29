@@ -161,24 +161,26 @@ app.post('/login', /*checkNotAuthenticated,*/ (req, res, next) => {
 app.post('/registerOrder', (req, res) => {
     const orderID = uuidv4()
     req.body.order.orderID = orderID
-    req.body.order.userName = users.find(user => user.id === req.body.order.userID).name
     orders.push(req.body.order)
     res.send(JSON.stringify({orderID: orderID}))
 
-    const mailOptions = {
-        from: 'info-corona@mail.ru',
-        to: users.find(user => user.id === req.body.order.userID).email,
-        subject: `Ваш заказ № ${orderID} зарегистрирован // Шестой русский магазин КОРОНА`,
-        html: ejs.render(fs.readFileSync('./templates/email.ejs', {encoding:'utf-8'}), req.body.order)
-    }
-      
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log('Email sent: ' + info.response);
+    if(req.body.order.userID) {
+        req.body.order.userName = users.find(user => user.id === req.body.order.userID).name
+        const mailOptions = {
+            from: 'info-corona@mail.ru',
+            to: users.find(user => user.id === req.body.order.userID).email,
+            subject: `Ваш заказ № ${orderID} зарегистрирован // Шестой русский магазин КОРОНА`,
+            html: ejs.render(fs.readFileSync('./templates/email.ejs', {encoding:'utf-8'}), req.body.order)
         }
-    })
+        
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+            console.log(error);
+            } else {
+            console.log('Email sent: ' + info.response);
+            }
+        })
+    }
 })
 
 app.post('/getOrders', (req, res) => {
