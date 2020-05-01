@@ -205,4 +205,20 @@ app.delete('/logoutUser', (req, res) => {
     res.send(JSON.stringify({result: "success"}))
 })
 
+app.post('/addMoney', (req, res) => {
+    let user = users.find(user => user.id === req.body.userID)
+
+    if(!user) {
+        res.send(JSON.stringify({
+            result: 'no user specified'
+        }))
+        return
+    }
+
+    user.saldo += parseInt(req.body.amount)
+    res.send(JSON.stringify({
+        result: 'money added'
+    }))
+})
+
 app.listen(process.env.PORT || 8080)
