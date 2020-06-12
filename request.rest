@@ -1,20 +1,44 @@
-GET http://localhost:3001/users
-
+GET http://localhost:3001/products/all/desc/
 ###
 
-POST http://localhost:3001/users
+GET http://localhost:3001/search/123/asc/0
+###
+
+GET http://localhost:3001/orders/3211
+###
+
+GET http://localhost:3001/categories
+###
+GET http://localhost:3001/productsAmount/Бункеры
+###
+
+POST http://localhost:3001/registerOrder
 Content-Type: application/json
 
 {
-    "name": "hino",
-    "password": "password"
+    "order": {
+        "a": 3,
+        "b": 4
+    }
 }
-
 ###
 
-POST http://localhost:3001/getOrders
+POST http://localhost:3001/register
 Content-Type: application/json
 
 {
-    "userID": "6fc0cece-98a9-4f50-87d9-2ed738ae28a5"
+    "name": "igor",
+    "email": "w@w",
+    "password": "w"
 }
+###
+
+POST http://localhost:3001/login
+Content-Type: application/json
+
+{
+    "email": "w@w",
+    "password": "w"
+}
+
+###
