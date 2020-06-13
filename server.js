@@ -79,7 +79,7 @@ app.get("/productsAmount/:category?", async (req, res) => {
 	try {
 		const amount = await db
 			.collection("products")
-			.countDocuments(req.params.category === "all" ? {} : { category: req.params.category });
+			.countDocuments(req.params.category === "Все" ? {} : { category: req.params.category });
 		res.status(200).json(amount);
 	} catch (error) {
 		res.status(500).json({ error: error });
@@ -87,12 +87,13 @@ app.get("/productsAmount/:category?", async (req, res) => {
 });
 
 app.get("/products/:category?/:sort?/:page?", async (req, res) => {
+	if (req.params.page > 0) req.params.page--;
 	const docsOffset = req.params.page ? req.params.page * DOCS_PER_PAGE : 0;
 
 	try {
 		let products = await db
 			.collection("products")
-			.find(req.params.category === "all" ? {} : { category: req.params.category })
+			.find(req.params.category === "Все" ? {} : { category: req.params.category })
 			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
 			.skip(docsOffset)
 			.limit(DOCS_PER_PAGE)
