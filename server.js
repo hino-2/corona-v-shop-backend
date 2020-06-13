@@ -18,6 +18,8 @@ const nodemailer = require("nodemailer");
 const ejs = require("ejs");
 const fs = require("fs");
 const MongoClient = require("mongodb").MongoClient;
+const Cursor = require("mongodb").Cursor;
+const mobile = require("is-mobile");
 
 const app = express();
 
@@ -29,6 +31,11 @@ let db;
 	await client.connect();
 	db = client.db("corona");
 })();
+Cursor.prototype.pagination = function (pageStart, pageEnd) {
+	if (pageStart === "none") return this;
+
+	return this.skip(pageStart).limit(pageEnd);
+};
 // mongo end
 
 initPassport(
@@ -86,17 +93,19 @@ app.get("/productsAmount/:category?", async (req, res) => {
 	}
 });
 
-app.get("/products/:category?/:sort?/:page?", async (req, res) => {
+app.get("/products/:category?/:sort?/:page?/:namemask?", async (req, res) => {
 	if (req.params.page > 0) req.params.page--;
-	const docsOffset = req.params.page ? req.params.page * DOCS_PER_PAGE : 0;
+	const docsOffset = isNaN(req.params.page) ? "none" : req.params.page * DOCS_PER_PAGE;
+
+	let searchParams = req.params.category === "Все" ? {} : { category: req.params.category };
+	if (req.params.namemask) searchParams = { name: { $regex: new RegExp(req.params.namemask, "i") } };
 
 	try {
 		let products = await db
 			.collection("products")
-			.find(req.params.category === "Все" ? {} : { category: req.params.category })
+			.find(searchParams)
 			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
-			.skip(docsOffset)
-			.limit(DOCS_PER_PAGE)
+			.pagination(docsOffset, DOCS_PER_PAGE)
 			.toArray();
 
 		res.status(200).json(products);
@@ -107,9 +116,19 @@ app.get("/products/:category?/:sort?/:page?", async (req, res) => {
 
 app.get("/orders/:userId", async (req, res) => {
 	try {
-		const orders = await db.collection("orders").find({ user: req.params.userId }).toArray();
+		const orders = await db.collection("orders").find({ userID: req.params.userId }).toArray();
 
 		res.status(200).json(orders);
+	} catch (error) {
+		res.status(500).json({ error: error });
+	}
+});
+
+app.get("/order/:orderId", async (req, res) => {
+	try {
+		const order = await db.collection("orders").find({ orderID: req.params.orderId }).toArray();
+
+		res.status(200).json(order[0]);
 	} catch (error) {
 		res.status(500).json({ error: error });
 	}
@@ -183,7 +202,7 @@ app.post("/registerOrder", async (req, res) => {
 	try {
 		const result = await db.collection("orders").insertOne(req.body.order);
 
-		res.status(200).json({ insertedCount: result.insertedCount, orderID: orderID });
+		res.status(200).json({ insertedCount: result.insertedCount, orderID: req.body.order.orderID });
 	} catch (error) {
 		res.status(500).json({ error: error });
 	}
@@ -192,7 +211,7 @@ app.post("/registerOrder", async (req, res) => {
 	// else email
 
 	try {
-		const user = await db.collection("users").find({ userId: req.body.order.userID }).toArray();
+		const user = await db.collection("users").find({ id: req.body.order.userID }).toArray();
 		if (user.length === 0) throw `No user found, ID: ${req.body.order.userID}`;
 
 		req.body.order.userName = user[0].name;
@@ -215,23 +234,23 @@ app.post("/registerOrder", async (req, res) => {
 	}
 });
 
-app.get("/search/:mask/:sort?/:page?", async (req, res) => {
-	const docsOffset = req.params.page ? req.params.page * DOCS_PER_PAGE : 0;
+// app.get("/search/:mask/:sort?/:page?", async (req, res) => {
+// 	const docsOffset = req.params.page ? req.params.page * DOCS_PER_PAGE : 0;
 
-	try {
-		const result = await db
-			.collection("products")
-			.find({ name: { $regex: new RegExp(req.params.mask, "i") } })
-			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
-			.skip(docsOffset)
-			.limit(DOCS_PER_PAGE)
-			.toArray();
+// 	try {
+// 		const result = await db
+// 			.collection("products")
+// 			.find({ name: { $regex: new RegExp(req.params.mask, "i") } })
+// 			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
+// 			.skip(docsOffset)
+// 			.limit(DOCS_PER_PAGE)
+// 			.toArray();
 
-		res.status(200).json(result);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
+// 		res.status(200).json(result);
+// 	} catch (error) {
+// 		res.status(500).json({ error: error });
+// 	}
+// });
 
 app.delete("/logoutUser", (req, res) => {
 	// if (req.body.userID === undefined) return res.sendStatus(403);
