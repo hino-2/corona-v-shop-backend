@@ -2,267 +2,85 @@ if (process.env.NODE_ENV !== "production") {
 	require("dotenv").config();
 }
 
-const DOCS_PER_PAGE = 4;
-
 const express = require("express");
-const bcrypt = require("bcrypt");
-const passport = require("passport");
-const initPassport = require("./passport-config");
-const flash = require("express-flash");
-const session = require("express-session");
-const methodOverride = require("method-override");
-const { v4: uuidv4 } = require("uuid");
-const path = require("path");
 const history = require("connect-history-api-fallback");
-const nodemailer = require("nodemailer");
-const ejs = require("ejs");
-const fs = require("fs");
-const MongoClient = require("mongodb").MongoClient;
-const Cursor = require("mongodb").Cursor;
-const mobile = require("is-mobile");
+const initMongo = require("./mongodb-config");
+
+{
+	// const passport = require("passport");
+	// const initPassport = require("./passport-config");
+	// const flash = require("express-flash");
+	// const session = require("express-session");
+	// const path = require("path");
+	// const ejs = require("ejs");
+	// const fs = require("fs");
+	// const methodOverride = require("method-override");
+}
 
 const app = express();
 
-// mongo
-const uri = `mongodb+srv://${process.env.MONGOUSER}:${process.env.MONGOPASS}@hino-2-cluster-yminm.mongodb.net/corona?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-let db;
+// mongo start
 (async function () {
-	await client.connect();
-	db = client.db("corona");
+	const db = await initMongo();
+	app.set("db", db);
 })();
-Cursor.prototype.pagination = function (pageStart, pageEnd) {
-	if (pageStart === "none") return this;
-
-	return this.skip(pageStart).limit(pageEnd);
-};
 // mongo end
 
-initPassport(
-	passport,
-	(email) => users.find((user) => user.email == email),
-	(id) => users.find((user) => user.id == id)
-);
-
-const transporter = nodemailer.createTransport({
-	service: "Mail.ru",
-	auth: {
-		user: "info-corona@mail.ru",
-		pass: "coronavirusshop",
-	},
-});
+{
+	// initPassport(
+	// 	passport,
+	// 	(email) => users.find((user) => user.email == email),
+	// 	(id) => users.find((user) => user.id == id)
+	// );
+}
 
 app.use(history());
 app.use("/", express.static(__dirname + "/"));
 app.use("/static", express.static(__dirname + "/static"));
 app.use("/img", express.static(__dirname + "/img"));
 app.use(express.urlencoded({ extended: false }));
-// app.set('view-engine', 'ejs')
-app.use(flash());
-app.use(
-	session({
-		genid: () => uuidv4(),
-		secret: "process.env.SESSION_SECRET",
-		resave: false,
-		saveUninitialized: false,
-	})
-);
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(methodOverride("_method"));
 app.use(express.json());
 
-app.get("/categories", async (req, res) => {
-	try {
-		const categories = await db.collection("category").find({}).toArray();
-
-		res.status(200).json(categories);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-app.get("/productsAmount/:category?", async (req, res) => {
-	try {
-		const amount = await db
-			.collection("products")
-			.countDocuments(req.params.category === "Все" ? {} : { category: req.params.category });
-		res.status(200).json(amount);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-app.get("/products/:category?/:sort?/:page?/:namemask?", async (req, res) => {
-	if (req.params.page > 0) req.params.page--;
-	const docsOffset = isNaN(req.params.page) ? "none" : req.params.page * DOCS_PER_PAGE;
-
-	let searchParams = req.params.category === "Все" ? {} : { category: req.params.category };
-	if (req.params.namemask) searchParams = { name: { $regex: new RegExp(req.params.namemask, "i") } };
-
-	try {
-		let products = await db
-			.collection("products")
-			.find(searchParams)
-			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
-			.pagination(docsOffset, DOCS_PER_PAGE)
-			.toArray();
-
-		res.status(200).json(products);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-app.get("/orders/:userId", async (req, res) => {
-	try {
-		const orders = await db.collection("orders").find({ userID: req.params.userId }).toArray();
-
-		res.status(200).json(orders);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-app.get("/order/:orderId", async (req, res) => {
-	try {
-		const order = await db.collection("orders").find({ orderID: req.params.orderId }).toArray();
-
-		res.status(200).json(order[0]);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
 {
-	// app.get('/', checkAuthenticated, (req, res) => {
-	//     console.log(req.user.email)
-	//     res.render('index.ejs', { email: req.user.email })
-	// })
-	// app.get('/register', checkNotAuthenticated, (req, res) => {
-	//     res.render('register.ejs')
-	// })
-	// app.get('/login', checkNotAuthenticated, (req, res) => {
-	//     res.render('login.ejs')
-	// })
+	// app.set('view-engine', 'ejs')
+	// app.use(flash());
+	// app.use(
+	// 	session({
+	// 		genid: () => uuidv4(),
+	// 		secret: "process.env.SESSION_SECRET",
+	// 		resave: false,
+	// 		saveUninitialized: false,
+	// 	})
+	// );
+	// app.use(passport.initialize());
+	// app.use(passport.session());
+	// app.use(methodOverride("_method"));
 }
 
-app.post("/register", async (req, res) => {
-	try {
-		const isExist = (await db.collection("users").find({ email: req.body.email }).toArray()).length > 0;
-		if (isExist) throw "existing email";
+const categoriesRouter = require("./routes/categories");
+const productsAmountRouter = require("./routes/productsAmount");
+const productsRouter = require("./routes/products");
+const ordersRouter = require("./routes/orders");
+const orderRouter = require("./routes/order");
+const registerRouter = require("./routes/register");
+const loginRouter = require("./routes/login");
+const registerOrderRouter = require("./routes/registerOrder");
 
-		const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-		const result = await db.collection("users").insertOne({
-			id: uuidv4(),
-			name: req.body.name,
-			email: req.body.email,
-			password: hashedPassword,
-			saldo: 0,
-		});
-
-		res.status(200).json({ result: "success" });
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-{
-	// app.post('/login', checkNotAuthenticated, (req, res) => {
-	//     console.log(req.body)
-	//     // passport.authenticate('local', {
-	//     //     successRedirect: 'http://localhost:3000/',
-	//     //     failureRedirect: 'http://localhost:3000/login',
-	//     //     failureFlash: true
-	//     // })
-	//     passport.authenticate('local', () => {
-	//         console.log('authed')
-	//         res.send(users.find(user => user.email == req.body.email).id).end()
-	//     })
-	// })
-}
-
-app.post("/login", async (req, res) => {
-	try {
-		const user = await db.collection("users").find({ email: req.body.email }).toArray();
-		if (user.length === 0) throw "User doesnt exists";
-
-		if (!bcrypt.compareSync(req.body.password, user[0].password)) throw "Wrong password";
-
-		res.status(200).json(user[0]);
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-});
-
-app.post("/registerOrder", async (req, res) => {
-	req.body.order.orderID = uuidv4();
-
-	try {
-		const result = await db.collection("orders").insertOne(req.body.order);
-
-		res.status(200).json({ insertedCount: result.insertedCount, orderID: req.body.order.orderID });
-	} catch (error) {
-		res.status(500).json({ error: error });
-	}
-
-	if (!req.body.order.userID) return;
-	// else email
-
-	try {
-		const user = await db.collection("users").find({ id: req.body.order.userID }).toArray();
-		if (user.length === 0) throw `No user found, ID: ${req.body.order.userID}`;
-
-		req.body.order.userName = user[0].name;
-		const mailOptions = {
-			from: "info-corona@mail.ru",
-			to: user[0].email,
-			subject: `Ваш заказ № ${req.body.order.orderID} зарегистрирован // Шестой русский магазин КОРОНА`,
-			html: ejs.render(fs.readFileSync("./templates/email.ejs", { encoding: "utf-8" }), req.body.order),
-		};
-
-		transporter.sendMail(mailOptions, (error, info) => {
-			if (error) {
-				console.log(error);
-				return;
-			}
-			console.log(`Email sent: ${info.response}`);
-		});
-	} catch (error) {
-		console.log(`Wanted to send email to user with ID ${req.body.order.userID} and FAILED:`, error);
-	}
-});
-
-// app.get("/search/:mask/:sort?/:page?", async (req, res) => {
-// 	const docsOffset = req.params.page ? req.params.page * DOCS_PER_PAGE : 0;
-
-// 	try {
-// 		const result = await db
-// 			.collection("products")
-// 			.find({ name: { $regex: new RegExp(req.params.mask, "i") } })
-// 			.sort({ price: req.params.sort === "desc" ? -1 : 1 })
-// 			.skip(docsOffset)
-// 			.limit(DOCS_PER_PAGE)
-// 			.toArray();
-
-// 		res.status(200).json(result);
-// 	} catch (error) {
-// 		res.status(500).json({ error: error });
-// 	}
-// });
-
-app.delete("/logoutUser", (req, res) => {
-	// if (req.body.userID === undefined) return res.sendStatus(403);
-	// const user = users.find((user) => user.id === req.body.userID);
-	// user.isLoggedIn = false;
-	// req.logOut();
-	// res.send(JSON.stringify({ result: "success" }));
-});
+app.use("/categories", categoriesRouter);
+app.use("/productsAmount", productsAmountRouter);
+app.use("/products", productsRouter);
+app.use("/orders", ordersRouter);
+app.use("/order", orderRouter);
+app.use("/register", registerRouter);
+app.use("/login", loginRouter);
+app.use("/registerOrder", registerOrderRouter);
 
 app.listen(process.env.PORT || 8080);
 
 /// ===================================================================================================
+/// ========================================= THE END =================================================
+/// ===================================================================================================
+
 app.post("/login", (req, res, next) => {
 	passport.authenticate("local", (err, user, info) => {
 		req.login(user, (err) => {
@@ -274,6 +92,14 @@ app.post("/login", (req, res, next) => {
 			return res.send(JSON.stringify({ userID: user.id, username: user.name, saldo: user.saldo }));
 		});
 	})(req, res, next);
+});
+
+app.delete("/logoutUser", (req, res) => {
+	// if (req.body.userID === undefined) return res.sendStatus(403);
+	// const user = users.find((user) => user.id === req.body.userID);
+	// user.isLoggedIn = false;
+	// req.logOut();
+	// res.send(JSON.stringify({ result: "success" }));
 });
 
 app.post("/addMoney", (req, res) => {
@@ -307,3 +133,31 @@ const checkNotAuthenticated = (req, res, next) => {
 
 	next();
 };
+
+{
+	// app.get('/', checkAuthenticated, (req, res) => {
+	//     console.log(req.user.email)
+	//     res.render('index.ejs', { email: req.user.email })
+	// })
+	// app.get('/register', checkNotAuthenticated, (req, res) => {
+	//     res.render('register.ejs')
+	// })
+	// app.get('/login', checkNotAuthenticated, (req, res) => {
+	//     res.render('login.ejs')
+	// })
+}
+
+{
+	// app.post('/login', checkNotAuthenticated, (req, res) => {
+	//     console.log(req.body)
+	//     // passport.authenticate('local', {
+	//     //     successRedirect: 'http://localhost:3000/',
+	//     //     failureRedirect: 'http://localhost:3000/login',
+	//     //     failureFlash: true
+	//     // })
+	//     passport.authenticate('local', () => {
+	//         console.log('authed')
+	//         res.send(users.find(user => user.email == req.body.email).id).end()
+	//     })
+	// })
+}
