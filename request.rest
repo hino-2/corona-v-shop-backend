@@ -1,10 +1,13 @@
-GET http://localhost:3001/products/all/desc/
+GET http://localhost:3001/products/Все/desc/1/
 ###
 
 GET http://localhost:3001/search/123/asc/0
 ###
 
-GET http://localhost:3001/orders/3211
+GET http://localhost:3001/orders/1278f727-7407-4548-ab72-25babe1c3e66
+###
+
+GET http://localhost:3001/order/b5b75841-0b44-4b71-a6a8-c8fdf57257b0
 ###
 
 GET http://localhost:3001/categories

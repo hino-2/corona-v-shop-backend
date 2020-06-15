@@ -81,83 +81,85 @@ app.listen(process.env.PORT || 8080);
 /// ========================================= THE END =================================================
 /// ===================================================================================================
 
-app.post("/login", (req, res, next) => {
-	passport.authenticate("local", (err, user, info) => {
-		req.login(user, (err) => {
-			if (!req.user) return res.send(JSON.stringify({ userID: null }));
+{
+	app.post("/login", (req, res, next) => {
+		passport.authenticate("local", (err, user, info) => {
+			req.login(user, (err) => {
+				if (!req.user) return res.send(JSON.stringify({ userID: null }));
 
-			const user = users.find((user) => user.id === req.user.id);
-			user.isLoggedIn = true;
+				const user = users.find((user) => user.id === req.user.id);
+				user.isLoggedIn = true;
 
-			return res.send(JSON.stringify({ userID: user.id, username: user.name, saldo: user.saldo }));
-		});
-	})(req, res, next);
-});
+				return res.send(JSON.stringify({ userID: user.id, username: user.name, saldo: user.saldo }));
+			});
+		})(req, res, next);
+	});
 
-app.delete("/logoutUser", (req, res) => {
-	// if (req.body.userID === undefined) return res.sendStatus(403);
-	// const user = users.find((user) => user.id === req.body.userID);
-	// user.isLoggedIn = false;
-	// req.logOut();
-	// res.send(JSON.stringify({ result: "success" }));
-});
+	app.delete("/logoutUser", (req, res) => {
+		// if (req.body.userID === undefined) return res.sendStatus(403);
+		// const user = users.find((user) => user.id === req.body.userID);
+		// user.isLoggedIn = false;
+		// req.logOut();
+		// res.send(JSON.stringify({ result: "success" }));
+	});
 
-app.post("/addMoney", (req, res) => {
-	let user = users.find((user) => user.id === req.body.userID);
+	app.post("/addMoney", (req, res) => {
+		let user = users.find((user) => user.id === req.body.userID);
 
-	if (!user) {
+		if (!user) {
+			res.send(
+				JSON.stringify({
+					result: "no user specified",
+				})
+			);
+			return;
+		}
+
+		user.saldo += parseInt(req.body.amount);
 		res.send(
 			JSON.stringify({
-				result: "no user specified",
+				result: "money added",
 			})
 		);
-		return;
+	});
+
+	const checkAuthenticated = (req, res, next) => {
+		if (req.isAuthenticated()) return next();
+
+		res.redirect("http://localhost:3000/login");
+	};
+
+	const checkNotAuthenticated = (req, res, next) => {
+		if (req.isAuthenticated()) return res.redirect("http://localhost:3000/");
+
+		next();
+	};
+
+	{
+		// app.get('/', checkAuthenticated, (req, res) => {
+		//     console.log(req.user.email)
+		//     res.render('index.ejs', { email: req.user.email })
+		// })
+		// app.get('/register', checkNotAuthenticated, (req, res) => {
+		//     res.render('register.ejs')
+		// })
+		// app.get('/login', checkNotAuthenticated, (req, res) => {
+		//     res.render('login.ejs')
+		// })
 	}
 
-	user.saldo += parseInt(req.body.amount);
-	res.send(
-		JSON.stringify({
-			result: "money added",
-		})
-	);
-});
-
-const checkAuthenticated = (req, res, next) => {
-	if (req.isAuthenticated()) return next();
-
-	res.redirect("http://localhost:3000/login");
-};
-
-const checkNotAuthenticated = (req, res, next) => {
-	if (req.isAuthenticated()) return res.redirect("http://localhost:3000/");
-
-	next();
-};
-
-{
-	// app.get('/', checkAuthenticated, (req, res) => {
-	//     console.log(req.user.email)
-	//     res.render('index.ejs', { email: req.user.email })
-	// })
-	// app.get('/register', checkNotAuthenticated, (req, res) => {
-	//     res.render('register.ejs')
-	// })
-	// app.get('/login', checkNotAuthenticated, (req, res) => {
-	//     res.render('login.ejs')
-	// })
-}
-
-{
-	// app.post('/login', checkNotAuthenticated, (req, res) => {
-	//     console.log(req.body)
-	//     // passport.authenticate('local', {
-	//     //     successRedirect: 'http://localhost:3000/',
-	//     //     failureRedirect: 'http://localhost:3000/login',
-	//     //     failureFlash: true
-	//     // })
-	//     passport.authenticate('local', () => {
-	//         console.log('authed')
-	//         res.send(users.find(user => user.email == req.body.email).id).end()
-	//     })
-	// })
+	{
+		// app.post('/login', checkNotAuthenticated, (req, res) => {
+		//     console.log(req.body)
+		//     // passport.authenticate('local', {
+		//     //     successRedirect: 'http://localhost:3000/',
+		//     //     failureRedirect: 'http://localhost:3000/login',
+		//     //     failureFlash: true
+		//     // })
+		//     passport.authenticate('local', () => {
+		//         console.log('authed')
+		//         res.send(users.find(user => user.email == req.body.email).id).end()
+		//     })
+		// })
+	}
 }
