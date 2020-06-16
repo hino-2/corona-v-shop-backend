@@ -25,8 +25,8 @@ router.post("/", async (req, res) => {
 		res.status(500).json({ error: error });
 	}
 
-	if (!req.body.order.userID) return;
-	// no user -> done, else email
+	if (!req.body.order.userID || process.env.NODE_ENV === "test") return;
+	// no user or testing mode -> done, else email
 
 	try {
 		const user = await req.app.get("db").collection("users").find({ id: req.body.order.userID }).toArray();

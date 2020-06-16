@@ -4,7 +4,7 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require("express");
 const history = require("connect-history-api-fallback");
-const initMongo = require("./mongodb-config");
+const initMongo = require("./mongodb-config").initMongo;
 
 {
 	// const passport = require("passport");
@@ -75,7 +75,9 @@ app.use("/register", registerRouter);
 app.use("/login", loginRouter);
 app.use("/registerOrder", registerOrderRouter);
 
-app.listen(process.env.PORT || 8080);
+const server = app.listen(process.env.PORT || 8080);
+
+module.exports = server;
 
 /// ===================================================================================================
 /// ========================================= THE END =================================================

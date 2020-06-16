@@ -7,7 +7,10 @@ router.post("/", async (req, res) => {
 	try {
 		const isExist =
 			(await req.app.get("db").collection("users").find({ email: req.body.email }).toArray()).length > 0;
-		if (isExist) throw "existing email";
+		if (isExist) {
+			res.status(409).json({ result: "existing email" });
+			return;
+		}
 
 		const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
