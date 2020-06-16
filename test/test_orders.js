@@ -16,7 +16,10 @@ describe("Post and get orders", () => {
 		initMongoTest()
 			.then((_conn) => {
 				conn = _conn;
-				done();
+				conn.db("corona-test")
+					.collection("orders")
+					.drop()
+					.then(() => done());
 			})
 			.catch((err) => done(err));
 	});

@@ -5,7 +5,11 @@
 	"main": "server.js",
 	"scripts": {
 		"devStart": "nodemon server.js",
-		"test": "mocha --recursive --exit --sort"
+		"test": "mocha --recursive --exit",
+		"testAuth": "mocha --recursive --exit -g Authentication",
+		"testCategories": "mocha --recursive --exit -g \"Get categories\"",
+		"testOrders": "mocha --recursive --exit -g \"Post and get orders\"",
+		"testProducts": "mocha --recursive --exit -g \"Get products\""
 	},
 	"author": "",
 	"license": "ISC",

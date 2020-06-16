@@ -1,4 +1,4 @@
-GET http://localhost:3001/products/Все/desc/1/
+GET http://corona-v-shop.ew.r.appspot.com/products/Все/asc/1/deluxe
 ###
 
 GET http://localhost:3001/search/123/asc/0
@@ -12,7 +12,7 @@ GET http://localhost:3001/order/b5b75841-0b44-4b71-a6a8-c8fdf57257b0
 
 GET http://localhost:3001/categories
 ###
-GET http://localhost:3001/productsAmount/Бункеры
+GET http://corona-v-shop.ew.r.appspot.com/productsAmount/Бункеры/deluxe
 ###
 
 POST http://localhost:3001/registerOrder

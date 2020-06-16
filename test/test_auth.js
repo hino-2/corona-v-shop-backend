@@ -17,7 +17,10 @@ describe("Authentication", () => {
 		initMongoTest()
 			.then((_conn) => {
 				conn = _conn;
-				done();
+				conn.db("corona-test")
+					.collection("users")
+					.drop()
+					.then(() => done());
 			})
 			.catch((err) => done(err));
 	});
@@ -66,11 +69,8 @@ describe("Authentication", () => {
 		request(app)
 			.post("/login")
 			.send({
-				id: "1278f727-7407-4548-ab72-25babe1c3e66",
-				name: "igor",
 				email: fakeEmail,
 				password: "password",
-				saldo: 0,
 			})
 			.then((res) => {
 				expect(res.body).to.contain.property("_id");
@@ -84,7 +84,7 @@ describe("Authentication", () => {
 			.catch((err) => done(err));
 	});
 
-	it("OK, login of not existing user fails", (done) => {
+	it("OK, login of non existing user fails", (done) => {
 		request(app)
 			.post("/login")
 			.send({
@@ -102,11 +102,8 @@ describe("Authentication", () => {
 		request(app)
 			.post("/login")
 			.send({
-				id: "1278f727-7407-4548-ab72-25babe1c3e66",
-				name: "igor",
 				email: fakeEmail,
 				password: "wrong password",
-				saldo: 0,
 			})
 			.then((res) => {
 				expect(res.body.error).to.equal("Wrong password");
