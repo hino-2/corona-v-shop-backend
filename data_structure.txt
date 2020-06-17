@@ -1,0 +1,55 @@
+БД corona, corona-test
+
+Документ в коллекции categories:
+{
+    _id: ObjectId
+    name: String
+}
+
+Документ в коллекции orders:
+{
+    _id: ObjectId
+    listOfProducts: Array
+        n: Object
+            _id: ObjectId
+            id: Int32
+            category: String
+            name: String
+            photo: String
+            price: Double
+            desc: String
+            опциональные поля
+    delivery: Object
+        mailType: String
+        indexTo: String
+        cashOfDelivery: Int32
+        regionTo: String
+        areaTo: String || Null
+        cityTo: String
+        addressTo: String        
+    total: Double
+    orderID: String
+    userID?: String
+}
+
+Документ в коллекции products:
+{
+    _id: ObjectId
+    id: Int32
+    category: String
+    name: String
+    photo: String
+    price: Double
+    desc: String
+    опциональные поля
+}
+
+Документ в коллекции users:
+{
+    _id: ObjectId
+    id: String
+    name: String
+    email: String
+    password: String
+    saldo: Double
+}
